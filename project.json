@@ -1,0 +1,10 @@
+{
+  "name": "rust-mongo-db",
+  "description": "A simple API to interact with MongoDB",
+  "language": "rust",
+  "major_version": "0",
+  "minor_version": "1",
+  "patch_version": "3",
+  "category": "database",
+  "github_repo": "https://github.com/DefinitelyNotSimon13/rust-mongo-db"
+}
