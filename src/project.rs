@@ -14,10 +14,10 @@ pub struct Project {
 }
 
 impl Project {
-    pub fn error(message: String) -> Self {
+    pub fn error(message: &str) -> Self {
         Project {
             name: "Error".to_string(),
-            description: message,
+            description: message.to_string(),
             language: "Error".to_string(),
             major_version: "Error".to_string(),
             minor_version: "Error".to_string(),

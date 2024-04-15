@@ -1,6 +1,6 @@
 use crate::app::App;
 use color_eyre::Result;
-use crossterm::event::{self, Event, KeyCode, KeyEvent};
+use crossterm::event::{self, Event, KeyCode};
 
 pub(crate) fn handle_event(app: &mut App) -> Result<()> {
     let key = match event::read()? {
@@ -11,7 +11,10 @@ pub(crate) fn handle_event(app: &mut App) -> Result<()> {
         return Ok(());
     }
     match key.code {
-        KeyCode::Char('f') => app.read_from_file("project.json"),
+        KeyCode::Char('f') => {
+            let (project, path) = App::read_from_file("project.json");
+            app.add_to_project_vector(project, path)
+        }
         KeyCode::Char('s') => app.search_through_files(),
         KeyCode::Char('q') => app.exit(),
         _ => Ok(()),

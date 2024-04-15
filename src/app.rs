@@ -1,5 +1,4 @@
 use crate::project::Project;
-use color_eyre::eyre::bail;
 use color_eyre::Result;
 use std::fs;
 use walkdir::WalkDir;
@@ -7,33 +6,46 @@ use walkdir::WalkDir;
 pub struct App {
     pub projects: Vec<(Project, String)>,
     pub test_contents: String,
+    pub current_dir: (Option<Project>, String),
     pub exiting: bool,
 }
 
 impl App {
     pub fn new() -> Self {
+        let (project, path) = App::read_from_file("project.json");
         App {
             projects: vec![],
             test_contents: "".to_string(),
+            current_dir: (project, path),
             exiting: false,
         }
     }
 
-    pub fn read_from_file(&mut self, file: &str) -> Result<()> {
+    pub fn add_to_project_vector(&mut self, project: Option<Project>, path: String) -> Result<()> {
+        match project {
+            Some(project) => self.projects.push((project, path)),
+            None => self.projects.push((Project::error(&path), path)),
+        }
+        Ok(())
+    }
+
+    pub fn read_from_file(file: &str) -> (Option<Project>, String) {
         let content = fs::read_to_string(file);
+        let path = fs::canonicalize(file);
+        let path = match path {
+            Ok(path) => path.to_string_lossy().into_owned(),
+            Err(e) => e.to_string(),
+        };
         let content = match content {
             Ok(contents) => contents,
-            Err(_) => bail!("error reading file"),
+            Err(_) => return (None, path),
         };
-        let project: Project = match serde_json::from_str(&content) {
+        let project: Option<Project> = match serde_json::from_str(&content) {
             Ok(project) => project,
-            Err(e) => Project::error(e.to_string()),
+            Err(e) => None,
         };
 
-        let path = fs::canonicalize(file)?.to_string_lossy().into_owned();
-        self.projects.push((project, path));
-
-        Ok(())
+        (project, path)
     }
 
     pub(crate) fn search_through_files(&mut self) -> Result<()> {
@@ -47,7 +59,8 @@ impl App {
         }
 
         for file in &files {
-            self.read_from_file(file)?;
+            let (project, path) = App::read_from_file(file);
+            self.add_to_project_vector(project, path);
         }
         Ok(())
     }
