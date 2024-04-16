@@ -3,7 +3,16 @@ use color_eyre::Result;
 use std::fs;
 use walkdir::WalkDir;
 
+#[derive(Default)]
+pub enum View {
+    #[default]
+    Test,
+    Edit,
+    Details,
+}
+
 pub struct App {
+    pub current_view: View,
     pub projects: Vec<(Project, String)>,
     pub test_contents: String,
     pub current_dir: (Option<Project>, String),
@@ -14,6 +23,7 @@ impl App {
     pub fn new() -> Self {
         let (project, path) = App::read_from_file("project.json");
         App {
+            current_view: View::default(),
             projects: vec![],
             test_contents: "".to_string(),
             current_dir: (project, path),
@@ -42,7 +52,7 @@ impl App {
         };
         let project: Option<Project> = match serde_json::from_str(&content) {
             Ok(project) => project,
-            Err(e) => None,
+            Err(_) => None,
         };
 
         (project, path)
@@ -60,13 +70,22 @@ impl App {
 
         for file in &files {
             let (project, path) = App::read_from_file(file);
-            self.add_to_project_vector(project, path);
+            self.add_to_project_vector(project, path)?;
         }
         Ok(())
     }
 
-    pub(crate) fn exit(&mut self) -> Result<()> {
+    pub fn exit(&mut self) -> Result<()> {
         self.exiting = true;
+        Ok(())
+    }
+
+    pub fn switch_view(&mut self) -> Result<()> {
+        match self.current_view {
+            View::Test => self.current_view = View::Edit,
+            View::Edit => self.current_view = View::Details,
+            View::Details => self.current_view = View::Test,
+        }
         Ok(())
     }
 }

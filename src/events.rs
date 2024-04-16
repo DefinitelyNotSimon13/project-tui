@@ -17,6 +17,7 @@ pub(crate) fn handle_event(app: &mut App) -> Result<()> {
         }
         KeyCode::Char('s') => app.search_through_files(),
         KeyCode::Char('q') => app.exit(),
+        KeyCode::Tab => app.switch_view(),
         _ => Ok(()),
     }
 }

@@ -6,9 +6,9 @@ mod tui;
 mod ui;
 use app::App;
 use color_eyre::{eyre::bail, Result};
-use crossterm::event::{self, Event};
+
 use flexi_logger::{FileSpec, Logger, WriteMode};
-use log::{info, trace, warn};
+use log::trace;
 use tui::Tui;
 
 fn main() -> Result<()> {
@@ -34,7 +34,8 @@ fn main() -> Result<()> {
 
 fn run_app(terminal: &mut Tui, app: &mut App) -> Result<()> {
     loop {
-        if let Err(e) = terminal.draw(|frame| ui::draw_ui(frame, app)) {
+        if let Err(e) = terminal.draw(|frame| ui::draw_ui(frame, app).expect("failed to render ui"))
+        {
             bail!("failed to draw UI: {}", e);
         }
         if let Err(e) = events::handle_event(app) {

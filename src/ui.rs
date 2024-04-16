@@ -1,52 +1,53 @@
+mod details_view;
+mod edit_view;
+mod test_view;
+mod utils;
+
+use color_eyre::Result;
 use ratatui::{
-    layout::{Constraint, Layout},
-    prelude::Alignment,
-    style::{Color, Style},
-    symbols::border,
+    prelude::{Constraint, Direction, Layout},
+    style::{Color, Style, Stylize},
     text::{Line, Span},
-    widgets::{block::Title, Block, BorderType, Borders, List, ListItem, Paragraph},
+    widgets::{block::Title, Paragraph},
     Frame,
 };
 
-use crate::app::App;
+use crate::app::{App, View};
 
-pub fn draw_ui(frame: &mut Frame, app: &mut App) {
-    let vertical_chunks =
-        Layout::vertical([Constraint::Min(1), Constraint::Length(4)]).split(frame.size());
+pub fn draw_ui(frame: &mut Frame, app: &mut App) -> Result<()> {
+    let vertical_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3),
+            Constraint::Min(2),
+            Constraint::Length(5),
+        ])
+        .split(frame.size());
 
-    let test = Title::from(String::from(" List "));
-    let block = Block::default()
-        .title(test.alignment(Alignment::Center))
-        .borders(Borders::ALL)
-        .border_set(border::THICK)
-        .border_type(BorderType::Rounded);
+    // Header
+    let block = utils::block_with_title(Title::from(""), None);
+    let header = Paragraph::new(Span::styled(
+        "A TUI Project Manager",
+        Style::default().fg(Color::Green).bold(),
+    ))
+    .block(block.clone());
+    frame.render_widget(header, vertical_layout[0]);
 
-    let mut list_items = Vec::<ListItem>::new();
-
-    for project in &app.projects {
-        list_items.push(ListItem::new(Line::from(Span::styled(
-            format!(
-                "{}: {} - {}",
-                project.0.name, project.0.description, project.1
-            ),
-            Style::default().fg(Color::Green),
-        ))));
-    }
-    let list = List::new(list_items).block(block);
-
-    frame.render_widget(list, vertical_chunks[0]);
-
-    let (project, path) = &app.current_dir;
-    let project: String = match project {
-        Some(project) => project.name.to_owned(),
-        None => "None".to_string(),
+    // Main View
+    match &app.current_view {
+        View::Test => test_view::render(app, frame, vertical_layout[1])?,
+        View::Edit => edit_view::render(app, frame, vertical_layout[1])?,
+        View::Details => details_view::render(app, frame, vertical_layout[1])?,
     };
-    let text = vec![Line::from(project), Line::from(path.to_owned())];
-    let current_dir = Paragraph::new(text).block(
-        Block::new()
-            .title(Title::from("Current dir").alignment(Alignment::Center))
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded),
-    );
-    frame.render_widget(current_dir, vertical_chunks[1])
+    let text = vec![
+        Line::from(Span::styled(
+            "Keyhints TBD",
+            Style::default().fg(Color::Yellow),
+        )),
+        Line::from(Span::styled("Simon Blum", Style::default().italic())),
+    ];
+    let footer = Paragraph::new(text).block(block);
+    frame.render_widget(footer, vertical_layout[2]);
+
+    Ok(())
 }

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Project {
     pub name: String,
     pub description: String,
@@ -26,5 +26,12 @@ impl Project {
             github_repo: None,
             tags: None,
         }
+    }
+
+    pub fn version_string(&self) -> String {
+        format!(
+            "{}.{}.{}",
+            self.major_version, self.minor_version, self.patch_version
+        )
     }
 }
