@@ -7,7 +7,6 @@ version = "0.2.0"
 authors = ["Simon Blum"]
 description = "TBD"
 documentation = "TBD"
-default-run = "tui"
  
 [workspace.dependencies]
 flexi_logger = "0.28.0"

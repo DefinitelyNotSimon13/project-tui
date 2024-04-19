@@ -1,4 +1,3 @@
-use color_eyre::Result;
 use ratatui::{
     prelude::Rect,
     style::Style,
@@ -10,7 +9,7 @@ use ratatui::{
 use super::utils;
 use crate::{app::App, project::Project};
 
-pub fn render(app: &mut App, frame: &mut Frame, area: Rect) -> Result<()> {
+pub fn render(app: &mut App, frame: &mut Frame, area: Rect) {
     let block = utils::block_with_title(Title::from("Details View"), None);
 
     let (project, _) = &app.current_dir;
@@ -38,6 +37,4 @@ pub fn render(app: &mut App, frame: &mut Frame, area: Rect) -> Result<()> {
     ];
     let paragraph = Paragraph::new(details).block(block);
     frame.render_widget(paragraph, area);
-
-    Ok(())
 }

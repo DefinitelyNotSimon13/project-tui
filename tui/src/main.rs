@@ -34,13 +34,11 @@ fn main() -> Result<()> {
 
 fn run_app(terminal: &mut Tui, app: &mut App) -> Result<()> {
     loop {
-        if let Err(e) = terminal.draw(|frame| ui::draw_ui(frame, app).expect("failed to render ui"))
-        {
-            bail!("failed to draw UI: {}", e);
-        }
-        if let Err(e) = events::handle_event(app) {
-            bail!("failed to handle event: {}", e);
-        }
+        match terminal.draw(|frame| ui::render(frame, app)) {
+            Ok(_) => {}
+            Err(e) => bail!(e),
+        };
+        events::handle_event(app);
         if app.exiting {
             break;
         }

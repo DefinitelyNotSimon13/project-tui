@@ -1,5 +1,4 @@
 use crate::project::Project;
-use color_eyre::Result;
 use std::fs;
 use walkdir::WalkDir;
 
@@ -25,18 +24,17 @@ impl App {
         App {
             current_view: View::default(),
             projects: vec![],
-            test_contents: "".to_string(),
+            test_contents: String::default(),
             current_dir: (project, path),
             exiting: false,
         }
     }
 
-    pub fn add_to_project_vector(&mut self, project: Option<Project>, path: String) -> Result<()> {
+    pub fn add_to_project_vector(&mut self, project: Option<Project>, path: String) {
         match project {
             Some(project) => self.projects.push((project, path)),
             None => self.projects.push((Project::error(&path), path)),
         }
-        Ok(())
     }
 
     pub fn read_from_file(file: &str) -> (Option<Project>, String) {
@@ -46,9 +44,8 @@ impl App {
             Ok(path) => path.to_string_lossy().into_owned(),
             Err(e) => e.to_string(),
         };
-        let content = match content {
-            Ok(contents) => contents,
-            Err(_) => return (None, path),
+        let Ok(content) = content else {
+            return (None, path);
         };
         let project: Option<Project> = match serde_json::from_str(&content) {
             Ok(project) => project,
@@ -58,7 +55,7 @@ impl App {
         (project, path)
     }
 
-    pub(crate) fn search_through_files(&mut self) -> Result<()> {
+    pub(crate) fn search_through_files(&mut self) {
         let filename_to_search = "project.json";
         let mut files = vec![];
         for entry in WalkDir::new("/home/simon/1_Coding") {
@@ -70,22 +67,19 @@ impl App {
 
         for file in &files {
             let (project, path) = App::read_from_file(file);
-            self.add_to_project_vector(project, path)?;
+            self.add_to_project_vector(project, path);
         }
-        Ok(())
     }
 
-    pub fn exit(&mut self) -> Result<()> {
+    pub fn exit(&mut self) {
         self.exiting = true;
-        Ok(())
     }
 
-    pub fn switch_view(&mut self) -> Result<()> {
+    pub fn switch_view(&mut self) {
         match self.current_view {
             View::Test => self.current_view = View::Edit,
             View::Edit => self.current_view = View::Details,
             View::Details => self.current_view = View::Test,
         }
-        Ok(())
     }
 }

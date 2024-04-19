@@ -3,7 +3,6 @@ mod edit_view;
 mod test_view;
 mod utils;
 
-use color_eyre::Result;
 use ratatui::{
     prelude::{Constraint, Direction, Layout},
     style::{Color, Style, Stylize},
@@ -14,7 +13,7 @@ use ratatui::{
 
 use crate::app::{App, View};
 
-pub fn draw_ui(frame: &mut Frame, app: &mut App) -> Result<()> {
+pub fn render(frame: &mut Frame, app: &mut App) {
     let vertical_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -35,9 +34,9 @@ pub fn draw_ui(frame: &mut Frame, app: &mut App) -> Result<()> {
 
     // Main View
     match &app.current_view {
-        View::Test => test_view::render(app, frame, vertical_layout[1])?,
-        View::Edit => edit_view::render(app, frame, vertical_layout[1])?,
-        View::Details => details_view::render(app, frame, vertical_layout[1])?,
+        View::Test => test_view::render(app, frame, vertical_layout[1]),
+        View::Edit => edit_view::render(app, frame, vertical_layout[1]),
+        View::Details => details_view::render(app, frame, vertical_layout[1]),
     };
     let text = vec![
         Line::from(Span::styled(
@@ -48,6 +47,4 @@ pub fn draw_ui(frame: &mut Frame, app: &mut App) -> Result<()> {
     ];
     let footer = Paragraph::new(text).block(block);
     frame.render_widget(footer, vertical_layout[2]);
-
-    Ok(())
 }
