@@ -8,7 +8,7 @@ use app::App;
 use color_eyre::{eyre::bail, Result};
 
 use flexi_logger::{FileSpec, Logger, WriteMode};
-use log::trace;
+use log::{info, trace};
 use tui::Tui;
 
 fn main() -> Result<()> {
@@ -18,6 +18,10 @@ fn main() -> Result<()> {
         .create_symlink("current.log")
         .start()?;
     trace!("Starting up");
+    let request_url = "http://127.0.0.1:8000/api/projects";
+    let response /*: Vec<TestProject>*/ = reqwest::blocking::get(request_url).unwrap().text().unwrap();
+    info!("{response:?}");
+
     errors::install_hooks()?;
     trace!("Error hooks installed");
     let mut terminal = tui::init()?;

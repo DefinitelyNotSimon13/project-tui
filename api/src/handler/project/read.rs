@@ -50,7 +50,7 @@ impl Read for Project {
         let json_response = serde_json::json!({
             "status": "ok",
             "count": project_responses.len(),
-            "notes": project_responses
+            "projects": project_responses
         });
 
         Ok(Json(json_response))

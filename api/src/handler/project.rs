@@ -13,7 +13,7 @@ fn to_response(project: &project::Model) -> project::ModelResponse {
     project::ModelResponse {
         id: project.id.clone(),
         name: project.name.clone(),
-        description: project.name.clone(),
+        description: project.description.clone(),
         major_version: project.major_version,
         minor_version: project.minor_version,
         patch_version: project.patch_version,
