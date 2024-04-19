@@ -1,11 +1,6 @@
 use std::sync::Arc;
 
-use axum::{
-    http::{header::CONTENT_TYPE, Method},
-    response::IntoResponse,
-    routing::get,
-    Json, Router,
-};
+use axum::http::{header::CONTENT_TYPE, Method};
 
 use dotenv::dotenv;
 use tokio::net::TcpListener;
@@ -13,11 +8,10 @@ use tokio::net::TcpListener;
 use sqlx::mysql::{MySqlPool, MySqlPoolOptions};
 
 pub mod model;
-use model::project;
 
 pub mod handler;
-use handler::health_check;
-use tower_http::cors::{any, Any, CorsLayer};
+
+use tower_http::cors::{Any, CorsLayer};
 pub mod schema;
 
 pub mod route;
@@ -42,7 +36,8 @@ async fn main() {
             pool
         }
         Err(e) => {
-            println!("❌ Failed to connect  to database: {:?}", e);
+            println!("❌ Failed to connect  to database: {e:?}");
+
             std::process::exit(1);
         }
     };

@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -9,47 +7,47 @@ use axum::{
 use serde_json::json;
 use sqlx::types::uuid;
 
-use crate::{model::project, schema::project::UpdateProjectSchema, AppState};
+use super::{to_response, AppData, JsonResponse, Project, Update};
+use crate::{model::project, schema::project::UpdateProjectSchema};
 
-use super::to_response;
+impl Update for Project {
+    async fn update(
+        Path(id): Path<uuid::Uuid>,
+        State(data): AppData,
+        Json(body): Json<UpdateProjectSchema>,
+    ) -> Result<impl IntoResponse, JsonResponse> {
+        // validate project with query macro
+        let query_result = sqlx::query_as!(
+            project::Model,
+            r"SELECT * FROM projects WHERE id = ?",
+            id.to_string()
+        )
+        .fetch_one(&data.db)
+        .await;
 
-pub async fn update(
-    Path(id): Path<uuid::Uuid>,
-    State(data): State<Arc<AppState>>,
-    Json(body): Json<UpdateProjectSchema>,
-) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    // validate project with query macro
-    let query_result = sqlx::query_as!(
-        project::Model,
-        r"SELECT * FROM projects WHERE id = ?",
-        id.to_string()
-    )
-    .fetch_one(&data.db)
-    .await;
+        // fetch the result
+        let project = match query_result {
+            Ok(project) => project,
+            Err(sqlx::Error::RowNotFound) => {
+                let error_response = serde_json::json!({
+                    "status": "error",
+                    "message": format!("Project with ID: {} not found", id)
+                });
+                return Err((StatusCode::NOT_FOUND, Json(error_response)));
+            }
+            Err(e) => {
+                return Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({
+                    "status":"error",
+                    "message":format!("{:?}",e)
+                    })),
+                ));
+            }
+        };
 
-    // fetch the result
-    let project = match query_result {
-        Ok(project) => project,
-        Err(sqlx::Error::RowNotFound) => {
-            let error_response = serde_json::json!({
-                "status": "error",
-                "message": format!("Project with ID: {} not found", id)
-            });
-            return Err((StatusCode::NOT_FOUND, Json(error_response)));
-        }
-        Err(e) => {
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({
-                "status":"error",
-                "message":format!("{:?}",e)
-                })),
-            ));
-        }
-    };
-
-    let update_result = sqlx::query(
-        r"UPDATE projects 
+        let update_result = sqlx::query(
+            r"UPDATE projects 
             SET name = ?,
             SET description = ?,
             SET major_version = ?,
@@ -58,78 +56,67 @@ pub async fn update(
             SET github_repo = ?
             WHERE id = ?
         ",
-    )
-    .bind(body.name.to_owned().unwrap_or_else(|| project.name.clone()))
-    .bind(
-        body.description
-            .to_owned()
-            .unwrap_or_else(|| project.description.clone()),
-    )
-    .bind(
-        body.major_version
-            .to_owned()
-            .unwrap_or(project.major_version),
-    )
-    .bind(
-        body.minor_version
-            .to_owned()
-            .unwrap_or(project.minor_version),
-    )
-    .bind(
-        body.patch_version
-            .to_owned()
-            .unwrap_or(project.patch_version),
-    )
-    .bind(match body.github_repo {
-        Some(repo) => Some(repo),
-        None => match project.github_repo {
-            Some(_) => project.github_repo.clone(),
-            None => None,
-        },
-    })
-    .bind(id.to_string())
-    .execute(&data.db)
-    .await
-    .map_err(|e| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({
-            "status":"error",
-            "message":format!("{:?}",e)
-            })),
         )
-    })?;
-
-    // if no data affected
-    if update_result.rows_affected() == 0 {
-        let error_response = serde_json::json!({
-            "status":"error",
-            "message":format!("Note with ID: {} not found", id)
-        });
-        return Err((StatusCode::NOT_FOUND, Json(error_response)));
-    }
-
-    // get updated data
-    let updated_project = sqlx::query_as!(
-        project::Model,
-        r"SELECT * FROM projects WHERE id = ?",
-        id.to_string()
-    )
-    .fetch_one(&data.db)
-    .await
-    .map_err(|e| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({"status": "error", "message":format!("{:?}", e)})),
+        .bind(body.name.clone().unwrap_or_else(|| project.name.clone()))
+        .bind(
+            body.description
+                .clone()
+                .unwrap_or_else(|| project.description.clone()),
         )
-    })?;
-
-    let project_response = serde_json::json!({
-        "status": "success",
-        "data": serde_json::json!({
-            "project": to_response(&updated_project)
+        .bind(body.major_version.unwrap_or(project.major_version))
+        .bind(body.minor_version.unwrap_or(project.minor_version))
+        .bind(body.patch_version.unwrap_or(project.patch_version))
+        .bind(match body.github_repo {
+            Some(repo) => Some(repo),
+            None => match project.github_repo {
+                Some(_) => project.github_repo.clone(),
+                None => None,
+            },
         })
-    });
+        .bind(id.to_string())
+        .execute(&data.db)
+        .await
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({
+                "status":"error",
+                "message":format!("{:?}",e)
+                })),
+            )
+        })?;
 
-    Ok(Json(project_response))
+        // if no data affected
+        if update_result.rows_affected() == 0 {
+            let error_response = serde_json::json!({
+                "status":"error",
+                "message":format!("Note with ID: {} not found", id)
+            });
+            return Err((StatusCode::NOT_FOUND, Json(error_response)));
+        }
+
+        // get updated data
+        let updated_project = sqlx::query_as!(
+            project::Model,
+            r"SELECT * FROM projects WHERE id = ?",
+            id.to_string()
+        )
+        .fetch_one(&data.db)
+        .await
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"status": "error", "message":format!("{:?}", e)})),
+            )
+        })?;
+
+        let project_response = serde_json::json!({
+            "status": "success",
+            "data": serde_json::json!({
+                "project": to_response(&updated_project)
+            })
+        });
+
+        Ok(Json(project_response))
+    }
 }

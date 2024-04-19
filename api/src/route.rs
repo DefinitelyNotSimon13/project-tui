@@ -6,17 +6,17 @@ use axum::{
 };
 
 use crate::{
-    handler::{health_check, project},
+    handler::{health_check, project::Project, Create, Delete, Read, Update},
     AppState,
 };
 
 pub fn create_router(app_state: Arc<AppState>) -> Router {
     Router::new()
         .route("/api/healthcheck", get(health_check))
-        .route("/api/projects", post(project::create))
-        .route("/api/projects", get(project::read::all))
-        .route("/api/projects/:id", get(project::read::by_id))
-        .route("/api/projects/:id", put(project::update))
-        .route("/api/projects/:id", delete(project::delete))
+        .route("/api/projects", post(Project::create))
+        .route("/api/projects", get(Project::read_all))
+        .route("/api/projects/:id", get(Project::read_id))
+        .route("/api/projects/:id", put(Project::update))
+        .route("/api/projects/:id", delete(Project::delete))
         .with_state(app_state)
 }
