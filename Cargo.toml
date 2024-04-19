@@ -1,3 +1,17 @@
 [workspace]
 members = ["tui", "api"]
 resolver = "2"
+
+[workspace.package]
+version = "0.2.0"
+authors = ["Simon Blum"]
+description = "TBD"
+documentation = "TBD"
+default-run = "tui"
+ 
+[workspace.dependencies]
+flexi_logger = "0.28.0"
+log = "0.4.21"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.115"
+thiserror = "1.0.58"

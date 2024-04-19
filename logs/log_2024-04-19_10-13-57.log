@@ -1,0 +1,8 @@
+TRACE [tui] Starting up
+TRACE [tui] Error hooks installed
+TRACE [tui] Terminal initialized
+TRACE [tui] Starting event loop
+TRACE [mio::poll] registering event source with poller: token=Token(0), interests=READABLE
+TRACE [mio::poll] registering event source with poller: token=Token(1), interests=READABLE
+TRACE [tui] Event loop ended, restoring terminal
+TRACE [tui] Terminal restored, exiting...
