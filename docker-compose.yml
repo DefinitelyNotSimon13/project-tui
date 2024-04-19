@@ -1,0 +1,22 @@
+services:
+  mysql:
+    image: mysql:latest
+    restart: always
+    container_name: mysql
+    env_file:
+      - ./.env
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysqlDb:/var/lib/mysql
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    container_name: phpmyadmin
+    ports:
+      - 8080:80
+    environment:
+      - PMA_ARBITRARY=1
+
+volumes:
+  mysqlDb:
