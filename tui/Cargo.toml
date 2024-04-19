@@ -1,0 +1,18 @@
+[package]
+name = "project-tui"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+color-eyre = "0.6.3"
+crossterm = "0.27.0"
+flexi_logger = "0.28.0"
+log = "0.4.21"
+ratatui = "0.26.1"
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.115"
+strum = "0.26.2"
+thiserror = "1.0.58"
+walkdir = "2.5.0"
